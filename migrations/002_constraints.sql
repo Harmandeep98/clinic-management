@@ -1,3 +1,4 @@
+-- migrate:up
 -- CONSTRAINTS -> CLINICS TABLE
 -- CLINIC STATUS MUST BE VALID
 ALTER TABLE clinics
@@ -148,3 +149,49 @@ SET NULL;
 -- FILE SIZE MUST BE POSITIVE INTEGER
 ALTER TABLE lab_reports
 ADD CONSTRAINT lab_reports_file_size_check CHECK (file_size > 0);
+-- ===========================================================================================
+-- ============================ ROLLBACK MIGRATION ===========================================
+-- ===========================================================================================
+--migrate:down
+ALTER TABLE clinics DROP CONSTRAINT IF EXISTS clinics_status_check;
+ALTER TABLE visits DROP CONSTRAINT IF EXISTS visits_unique_appointment;
+ALTER TABLE visits DROP CONSTRAINT IF EXISTS visit_status_check;
+ALTER TABLE visits DROP CONSTRAINT IF EXISTS visits_clinic_fk;
+ALTER TABLE visits DROP CONSTRAINT IF EXISTS visits_appointment_fk;
+ALTER TABLE visits DROP CONSTRAINT IF EXISTS visits_patients_fk;
+ALTER TABLE visits DROP CONSTRAINT IF EXISTS visits_doctor_fk;
+ALTER TABLE visits DROP CONSTRAINT IF EXISTS visits_completed_by_fk;
+ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointment_status_check;
+ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointment_clinic_fk;
+ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointment_patient_fk;
+ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointment_doctor_fx;
+ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointment_created_by_fk;
+ALTER TABLE billing_usage DROP CONSTRAINT IF EXISTS billing_usage_unique_visit;
+ALTER TABLE billing_usage DROP CONSTRAINT IF EXISTS billing_usage_clinic_fk;
+ALTER TABLE billing_usage DROP CONSTRAINT IF EXISTS;
+ALTER TABLE billing_usage DROP CONSTRAINT IF EXISTS billing_usage_check;
+ALTER TABLE billing_usage DROP CONSTRAINT IF EXISTS billing_unit_price_check;
+ALTER TABLE billing_usage DROP CONSTRAINT IF EXISTS billing_usage_type_check;
+ALTER TABLE prescriptions DROP CONSTRAINT IF EXISTS;
+ALTER TABLE prescriptions DROP CONSTRAINT IF EXISTS prescriptions_clinic_fk;
+ALTER TABLE prescriptions DROP CONSTRAINT IF EXISTS prescriptions_doctor_fk;
+ALTER TABLE prescriptions DROP CONSTRAINT IF EXISTS prescriptions_patients_fk;
+ALTER TABLE patients DROP CONSTRAINT IF EXISTS patients_clinic_fk;
+ALTER TABLE patients DROP CONSTRAINT IF EXISTS patients_gender_check;
+ALTER TABLE doctors DROP CONSTRAINT IF EXISTS doctors_clinic_fk;
+ALTER TABLE doctors DROP CONSTRAINT IF EXISTS doctors_user_fk;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_or_phone_check;
+DROP INDEX IF EXISTS users_email_unique;
+DROP INDEX IF EXISTS users_phone_unique;
+ALTER TABLE user_clinic_roles DROP CONSTRAINT IF EXISTS user_clinic_roles_user_fk;
+ALTER TABLE user_clinic_roles DROP CONSTRAINT IF EXISTS user_clinic_roles_clinic_fk;
+ALTER TABLE user_clinic_roles DROP CONSTRAINT IF EXISTS user_clinic_roles_unique;
+ALTER TABLE user_clinic_roles DROP CONSTRAINT IF EXISTS user_clinic_roles_role_check;
+ALTER TABLE user_patient_links DROP CONSTRAINT IF EXISTS user_patient_links_user_fk;
+ALTER TABLE user_patient_links DROP CONSTRAINT IF EXISTS user_patient_links_patient_fk;
+ALTER TABLE user_patient_links DROP CONSTRAINT IF EXISTS user_patient_links_unique;
+ALTER TABLE lab_reports DROP CONSTRAINT IF EXISTS lab_reports_clinic_fk;
+ALTER TABLE lab_reports DROP CONSTRAINT IF EXISTS lab_reports_visit_fk;
+ALTER TABLE lab_reports DROP CONSTRAINT IF EXISTS lab_reports_patient_fk;
+ALTER TABLE lab_reports DROP CONSTRAINT IF EXISTS lab_reports_uploaded_by_fk;
+ALTER TABLE lab_reports DROP CONSTRAINT IF EXISTS lab_reports_file_size_check;

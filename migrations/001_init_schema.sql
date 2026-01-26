@@ -1,3 +1,4 @@
+-- migrate:up
 -- CLINICS TABLE
 CREATE TABLE clinics (
   id UUID PRIMARY KEY,
@@ -139,3 +140,16 @@ CREATE TABLE lab_reports (
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
+
+-- migrate:down
+DROP TABLE IF EXISTS lab_reports;
+DROP TABLE IF EXISTS user_patient_links;
+DROP TABLE IF EXISTS user_clinic_roles;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS doctors;
+DROP TABLE IF EXISTS patients;
+DROP TABLE IF EXISTS prescriptions;
+DROP TABLE IF EXISTS billing_usage;
+DROP TABLE IF EXISTS visits;
+DROP TABLE IF EXISTS appointments;
+DROP TABLE IF EXISTS clinics;

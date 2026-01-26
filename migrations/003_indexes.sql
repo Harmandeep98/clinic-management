@@ -1,3 +1,4 @@
+-- migrate:up
 -- INDEXES -> CLINICS TABLE
 -- Public clinic discovery
 CREATE INDEX clinics_public_idx ON clinics (is_public)
@@ -61,3 +62,32 @@ CREATE INDEX lab_reports_patient_active_idx ON lab_reports (patient_id)
 WHERE is_deleted = false;
 -- CLINIC AUDITS (INCLUDES DELETED)
 CREATE INDEX lab_reports_clinic_uploaded_idx ON lab_reports (clinic_id, uploaded_at);
+-- ===========================================================================================
+-- ============================ ROLLBACK MIGRATION ===========================================
+-- ===========================================================================================
+-- migrate:down
+DROP INDEX IF EXISTS clinics_public_idx;
+DROP INDEX IF EXISTS clinics_location_idx;
+DROP INDEX IF EXISTS clinics_status_idx;
+DROP INDEX IF EXISTS visits_appointment_id_idx;
+DROP INDEX IF EXISTS visits_clinic_id_idx;
+DROP INDEX IF EXISTS visits_clinic_status_idx;
+DROP INDEX IF EXISTS appointments_clinic_scheduled_idx;
+DROP INDEX IF EXISTS appointments_doctor_scheduled_idx;
+DROP INDEX IF EXISTS appointments_patient_idx;
+DROP INDEX IF EXISTS billing_usage_clinic_occurred_idx;
+DROP INDEX IF EXISTS billing_usage_visit_id_idx;
+DROP INDEX IF EXISTS prescriptions_patient_idx;
+DROP INDEX IF EXISTS prescriptions_doctor_idx;
+DROP INDEX IF EXISTS prescriptions_clinic_idx;
+DROP INDEX IF EXISTS patients_clinic_idx;
+DROP INDEX IF EXISTS patients_phone_number_idx;
+DROP INDEX IF EXISTS patients_external_ref_idx;
+DROP INDEX IF EXISTS users_email_lookup_idx;
+DROP INDEX IF EXISTS users_phone_lookup_idx;
+DROP INDEX IF EXISTS user_patient_links_user_idx;
+DROP INDEX IF EXISTS user_patient_links_patient_idx;
+DROP INDEX IF EXISTS user_patient_links_active_idx;
+DROP INDEX IF EXISTS lab_reports_visit_active_idx;
+DROP INDEX IF EXISTS lab_reports_patient_active_idx;
+DROP INDEX IF EXISTS lab_reports_clinic_uploaded_idx;
