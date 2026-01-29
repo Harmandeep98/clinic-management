@@ -22,6 +22,25 @@ export async function idempotencyMiddleware(
 
   const redisKey = `idempotency:${idempotencyKey}`;
 
+  const existing = await redis.get(redisKey);
+
+  if (existing) {
+    const parsed = JSON.parse(existing);
+
+    if (parsed.status === "completed") {
+      reply.status(parsed.response.statusCode).send(parsed.response.body);
+      return reply;
+    }
+
+    if (parsed.status === "processing") {
+      reply.status(409).send({
+        error: "Duplicate request in progress",
+      });
+
+      return reply;
+    }
+  }
+
   const wasSet = await redis.set(
     redisKey,
     "processing",
@@ -38,5 +57,5 @@ export async function idempotencyMiddleware(
     throw new Error("IDEMPOTENCY_BLOCKED");
   }
 
-  (request as any).idempotencyKey = redisKey;
+  (request as any).idempotency = { redisKey };
 }

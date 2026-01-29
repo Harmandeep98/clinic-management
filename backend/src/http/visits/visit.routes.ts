@@ -6,7 +6,7 @@ import { VisitService } from "../../applications/visits/visit.service";
 export async function registerVisitRoutes(server: FastifyInstance) {
   const visitService = new VisitService();
 
-  server.post("/visits", async (request, reply) => {
+  server.post("/visits/start", async (request, reply) => {
     const parsed = StartVisitSchema.parse(request.body);
 
     const visitId = generateId();

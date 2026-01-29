@@ -1,0 +1,191 @@
+openapi: 3.0.3
+info:
+  title: Clinic Management API
+  description: Backend API for clinic visit lifecycle with idempotency support
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4000
+    description: Local development
+
+components:
+  securitySchemes:
+    IdempotencyKey:
+      type: apiKey
+      in: header
+      name: Idempotency-Key
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+      required:
+        - error
+
+    StartVisitRequest:
+      type: object
+      required:
+        - clinic_id
+        - appointment_id
+        - patient_id
+        - doctor_id
+      properties:
+        clinic_id:
+          type: string
+          format: uuid
+        appointment_id:
+          type: string
+          format: uuid
+        patient_id:
+          type: string
+          format: uuid
+        doctor_id:
+          type: string
+          format: uuid
+        notes:
+          type: string
+          nullable: true
+
+    StartVisitResponse:
+      type: object
+      properties:
+        visit_id:
+          type: string
+          format: uuid
+        visit_ref:
+          type: string
+        status:
+          type: string
+          example: IN_PROGRESS
+
+    CompleteVisitRequest:
+      type: object
+      required:
+        - visit_id
+      properties:
+        visit_id:
+          type: string
+          format: uuid
+
+    CompleteVisitResponse:
+      type: object
+      properties:
+        visit_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          example: COMPLETED
+
+paths:
+  /:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /visits/start:
+    post:
+      summary: Start a visit (idempotent)
+      description: >
+        Starts a visit for an appointment.
+        Uses Idempotency-Key header to guarantee exactly-once behavior.
+      security:
+        - IdempotencyKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartVisitRequest"
+      responses:
+        "201":
+          description: Visit started successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartVisitResponse"
+
+        "400":
+          description: Invalid request or constraint violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "409":
+          description: Duplicate request or business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /visits/complete:
+    post:
+      summary: Complete a visit (idempotent)
+      description: >
+        Marks a visit as completed.
+        Safe to retry using the same Idempotency-Key.
+      security:
+        - IdempotencyKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteVisitRequest"
+      responses:
+        "200":
+          description: Visit completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompleteVisitResponse"
+
+        "400":
+          description: Invalid input or invalid state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "404":
+          description: Visit not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "409":
+          description: Duplicate or conflicting request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

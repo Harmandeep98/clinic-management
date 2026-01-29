@@ -41,6 +41,42 @@ export class VisitRepository {
     return res.rows[0] ?? null;
   }
 
+  // Find Visits By PatientId
+  async findVsistsForPatient(
+    patientId: string,
+    limit: number = 10,
+    cursor?: { started_at: string; id: string },
+  ) {
+    const values: any[] = [patientId, limit];
+
+    let cursorClause = ``;
+
+    if (cursor && cursor.id && cursor.started_at) {
+      values.push(cursor.started_at, cursor.id);
+      cursorClause = `AND (
+        started_at < $3
+        OR (started_at = $3 AND id < $4)
+      )`;
+    }
+
+    const cursorQuery = `
+        SELECT 
+        id,
+        visit_ref,
+        clinic_id,
+        doctor_id,
+        visit_status,
+        started_at,
+        completed_at
+        FROM visits 
+        WHERE patient_id = $1 ${cursorClause} 
+        ORDER BY started_at DESC, id DESC LIMIT $2`;
+
+    const rows = await query<VisitRow>(cursorQuery, values);
+
+    return rows;
+  }
+
   // Create New visit with (transaction required)
   async create(
     client: PoolClient,

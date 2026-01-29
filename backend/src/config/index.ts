@@ -3,12 +3,8 @@ type AppConfig = {
   env: "development" | "production" | "test";
 
   db: {
-    host: string;
-    port: number;
-    user: string;
-    password: string;
-    name: string;
     ssl: boolean;
+    connectionUri: string;
   };
 
   redis: {
@@ -47,12 +43,8 @@ export function loadConfig(): AppConfig {
     env: env as AppConfig["env"],
     port: Number(getEnv("PORT", "3000")),
     db: {
-      host: getEnv("DB_HOST", "localhost"),
-      port: dbPort,
-      user: getEnv("DB_USER", "postgres"),
-      password: getEnv("DB_PASSWORD", "postgres"),
-      name: getEnv("DB_NAME", "clinic"),
       ssl: ssl,
+      connectionUri: getEnv("DATABASE_URL", ""),
     },
     redis: {
       host: getEnv("REDIS_HOST", "127.0.0.1"),
