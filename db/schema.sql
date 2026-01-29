@@ -77,6 +77,7 @@ CREATE TABLE public.clinics (
     clinic_status character varying NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    short_code character varying(5) NOT NULL,
     CONSTRAINT clinics_status_check CHECK (((clinic_status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying, 'SUSPENDED'::character varying])::text[])))
 );
 
@@ -416,6 +417,13 @@ CREATE INDEX clinics_location_idx ON public.clinics USING btree (country, state,
 --
 
 CREATE INDEX clinics_public_idx ON public.clinics USING btree (is_public) WHERE (is_public = true);
+
+
+--
+-- Name: clinics_short_code_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX clinics_short_code_unique ON public.clinics USING btree (short_code);
 
 
 --
@@ -772,4 +780,5 @@ ALTER TABLE ONLY public.visits
 INSERT INTO public.schema_migrations (version) VALUES
     ('001'),
     ('002'),
-    ('003');
+    ('003'),
+    ('004');
