@@ -47,6 +47,6 @@ export async function registerVisitRoutes(server: FastifyInstance) {
       cursor,
     );
 
-    return result
+    reply.status(200).send(result);
   });
 }
