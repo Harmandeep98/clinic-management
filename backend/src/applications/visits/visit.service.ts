@@ -81,13 +81,17 @@ export class VisitService {
     });
   }
 
-  async getVisitsByPatient(patientId: string, limit: number, cursor?: string) {
+  async getVisitsByPatient(
+    searchFilter: { type: string; id: string },
+    limit: number,
+    cursor?: string,
+  ) {
     const decodedCursor = cursor
       ? decodeCursor<{ started_at: string; id: string }>(cursor)
       : undefined;
 
     const visits = await this.visitRepo.findVsistsForPatient(
-      patientId,
+      searchFilter,
       limit,
       decodedCursor,
     );
@@ -100,6 +104,6 @@ export class VisitService {
           })
         : null;
 
-    return { data: visits, nextCursor };
+    return { visits, nextCursor };
   }
 }

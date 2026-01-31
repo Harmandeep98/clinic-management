@@ -59,6 +59,18 @@ CREATE TABLE public.billing_usage (
 
 
 --
+-- Name: clinic_counters; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.clinic_counters (
+    clinic_id uuid NOT NULL,
+    visit_seq bigint DEFAULT 0 NOT NULL,
+    appointment_seq bigint DEFAULT 0 NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: clinics; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -256,6 +268,14 @@ ALTER TABLE ONLY public.billing_usage
 
 ALTER TABLE ONLY public.billing_usage
     ADD CONSTRAINT billing_usage_unique_visit UNIQUE (visit_id);
+
+
+--
+-- Name: clinic_counters clinic_counters_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_counters
+    ADD CONSTRAINT clinic_counters_pkey PRIMARY KEY (clinic_id);
 
 
 --
@@ -560,10 +580,31 @@ CREATE INDEX visits_clinic_id_idx ON public.visits USING btree (clinic_id);
 
 
 --
+-- Name: visits_clinic_started_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX visits_clinic_started_id_idx ON public.visits USING btree (clinic_id, started_at DESC, id DESC);
+
+
+--
 -- Name: visits_clinic_status_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX visits_clinic_status_idx ON public.visits USING btree (clinic_id, visit_status);
+
+
+--
+-- Name: visits_doctor_started_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX visits_doctor_started_id_idx ON public.visits USING btree (doctor_id, started_at DESC, id DESC);
+
+
+--
+-- Name: visits_patient_started_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX visits_patient_started_id_idx ON public.visits USING btree (patient_id, started_at DESC, id DESC);
 
 
 --
@@ -612,6 +653,14 @@ ALTER TABLE ONLY public.billing_usage
 
 ALTER TABLE ONLY public.billing_usage
     ADD CONSTRAINT billing_usage_visit_fk FOREIGN KEY (visit_id) REFERENCES public.visits(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: clinic_counters clinic_counters_clinic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_counters
+    ADD CONSTRAINT clinic_counters_clinic_id_fkey FOREIGN KEY (clinic_id) REFERENCES public.clinics(id) ON DELETE CASCADE;
 
 
 --
@@ -781,4 +830,6 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('001'),
     ('002'),
     ('003'),
-    ('004');
+    ('004'),
+    ('005'),
+    ('006');

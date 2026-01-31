@@ -33,7 +33,7 @@ export async function registerVisitRoutes(server: FastifyInstance) {
     reply.status(200).send();
   });
 
-  server.get("patients/:patientId/visits", async (request, reply) => {
+  server.get("visits/:patientId", async (request, reply) => {
     const { patientId } = request.params as { patientId: string };
 
     const { limit = 20, cursor } = request.query as {
@@ -42,7 +42,41 @@ export async function registerVisitRoutes(server: FastifyInstance) {
     };
 
     const result = await visitService.getVisitsByPatient(
-      patientId,
+      { type: "patient_id", id: patientId },
+      Math.min(Number(limit), 50),
+      cursor,
+    );
+
+    reply.status(200).send(result);
+  });
+
+  server.get("visits/:doctorId", async (request, reply) => {
+    const { doctorId } = request.params as { doctorId: string };
+
+    const { limit = 20, cursor } = request.query as {
+      limit?: number;
+      cursor?: string;
+    };
+
+    const result = await visitService.getVisitsByPatient(
+      { type: "doctor_id", id: doctorId },
+      Math.min(Number(limit), 50),
+      cursor,
+    );
+
+    reply.status(200).send(result);
+  });
+
+  server.get("visits/:clinicId", async (request, reply) => {
+    const { clinicId } = request.params as { clinicId: string };
+
+    const { limit = 20, cursor } = request.query as {
+      limit?: number;
+      cursor?: string;
+    };
+
+    const result = await visitService.getVisitsByPatient(
+      { type: "clinic_id", id: clinicId },
       Math.min(Number(limit), 50),
       cursor,
     );

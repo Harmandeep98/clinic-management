@@ -43,11 +43,11 @@ export class VisitRepository {
 
   // Find Visits By PatientId
   async findVsistsForPatient(
-    patientId: string,
+    searchFilter: {type: string, id: string},
     limit: number,
     cursor?: { started_at: string; id: string },
   ) {
-    const values: any[] = [patientId, limit];
+    const values: any[] = [searchFilter.id, limit];
 
     let cursorClause = ``;
 
@@ -69,7 +69,7 @@ export class VisitRepository {
         started_at,
         completed_at
         FROM visits 
-        WHERE patient_id = $1 ${cursorClause} 
+        WHERE ${searchFilter.type} = $1 ${cursorClause} 
         ORDER BY started_at DESC, id DESC LIMIT $2`;
 
     const rows = await query<VisitRow>(cursorQuery, values);
