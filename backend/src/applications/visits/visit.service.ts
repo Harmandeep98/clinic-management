@@ -1,9 +1,10 @@
 import { withTransaction } from "../../infrastructure/db/transaction";
 import { AppError } from "../../shared/errors/app-errors";
 import { VisitRepository } from "../../repositories/visits/visit.repository";
-import { ClinicReadRepository } from "../../repositories/clinics/clinic-read.repository.js";
-import { ClinicCounterRepository } from "../../repositories/clinics/clinic-counter.repository.js";
-import { decodeCursor, encodeCursor } from "../../shared/pagination/cursor.js";
+import { ClinicReadRepository } from "../../repositories/clinics/clinic-read.repository";
+import { ClinicCounterRepository } from "../../repositories/clinics/clinic-counter.repository";
+import { decodeCursor, encodeCursor } from "../../shared/pagination/cursor";
+import { visitWhere } from "../../repositories/visits/visit.types";
 
 type StartVisitInput = {
   id: string;
@@ -81,20 +82,12 @@ export class VisitService {
     });
   }
 
-  async getVisitsByPatient(
-    searchFilter: { type: string; id: string },
-    limit: number,
-    cursor?: string,
-  ) {
+  async getVisits(where: visitWhere, limit: number, cursor?: string) {
     const decodedCursor = cursor
       ? decodeCursor<{ started_at: string; id: string }>(cursor)
       : undefined;
 
-    const visits = await this.visitRepo.findVsistsForPatient(
-      searchFilter,
-      limit,
-      decodedCursor,
-    );
+    const visits = await this.visitRepo.findVsists(where, limit, decodedCursor);
 
     const nextCursor =
       visits.length === limit
@@ -105,5 +98,21 @@ export class VisitService {
         : null;
 
     return { visits, nextCursor };
+  }
+
+  async getVisitsForPatients(
+    patientId: string,
+    limit: number,
+    cursor?: string,
+  ) {
+    return this.getVisits({ patient_id: patientId }, limit, cursor);
+  }
+
+  async getVisitsForClinics(clinicId: string, limit: number, cursor?: string) {
+    return this.getVisits({ clinic_id: clinicId }, limit, cursor);
+  }
+
+  async getVisitsForDoctors(doctorId: string, limit: number, cursor?: string) {
+    return this.getVisits({ doctor_id: doctorId }, limit, cursor);
   }
 }

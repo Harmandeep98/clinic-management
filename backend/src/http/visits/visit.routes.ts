@@ -33,7 +33,7 @@ export async function registerVisitRoutes(server: FastifyInstance) {
     reply.status(200).send();
   });
 
-  server.get("visits/:patientId", async (request, reply) => {
+  server.get("/patients/:patientId/visits/", async (request, reply) => {
     const { patientId } = request.params as { patientId: string };
 
     const { limit = 20, cursor } = request.query as {
@@ -41,8 +41,8 @@ export async function registerVisitRoutes(server: FastifyInstance) {
       cursor?: string;
     };
 
-    const result = await visitService.getVisitsByPatient(
-      { type: "patient_id", id: patientId },
+    const result = await visitService.getVisitsForPatients(
+      patientId,
       Math.min(Number(limit), 50),
       cursor,
     );
@@ -50,7 +50,7 @@ export async function registerVisitRoutes(server: FastifyInstance) {
     reply.status(200).send(result);
   });
 
-  server.get("visits/:doctorId", async (request, reply) => {
+  server.get("/doctors/:doctorId/visits", async (request, reply) => {
     const { doctorId } = request.params as { doctorId: string };
 
     const { limit = 20, cursor } = request.query as {
@@ -58,8 +58,8 @@ export async function registerVisitRoutes(server: FastifyInstance) {
       cursor?: string;
     };
 
-    const result = await visitService.getVisitsByPatient(
-      { type: "doctor_id", id: doctorId },
+    const result = await visitService.getVisitsForDoctors(
+      doctorId,
       Math.min(Number(limit), 50),
       cursor,
     );
@@ -67,7 +67,7 @@ export async function registerVisitRoutes(server: FastifyInstance) {
     reply.status(200).send(result);
   });
 
-  server.get("visits/:clinicId", async (request, reply) => {
+  server.get("/clinics/:clinicId/visits", async (request, reply) => {
     const { clinicId } = request.params as { clinicId: string };
 
     const { limit = 20, cursor } = request.query as {
@@ -75,8 +75,8 @@ export async function registerVisitRoutes(server: FastifyInstance) {
       cursor?: string;
     };
 
-    const result = await visitService.getVisitsByPatient(
-      { type: "clinic_id", id: clinicId },
+    const result = await visitService.getVisitsForClinics(
+      clinicId,
       Math.min(Number(limit), 50),
       cursor,
     );

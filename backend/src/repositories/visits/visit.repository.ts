@@ -1,8 +1,15 @@
 import { PoolClient } from "pg";
-import { VisitRow } from "./visit.types";
+import { VisitRow, visitWhere } from "./visit.types";
 import { query } from "../../infrastructure/db/query";
 
 export class VisitRepository {
+  private assertSingleFilter(where: visitWhere) {
+    const active = Object.values(where).filter(Boolean).length;
+    if (active !== 1) {
+      throw new Error("Exactly one visit filter must be provided");
+    }
+  }
+
   // Find visit By Appopintment ID
   async findByAppointmentId(id: string): Promise<VisitRow | null> {
     const findByIdQuery = `SELECT * FROM visits WHERE appointment_id = $1`;
@@ -42,22 +49,42 @@ export class VisitRepository {
   }
 
   // Find Visits By PatientId
-  async findVsistsForPatient(
-    searchFilter: {type: string, id: string},
+  async findVsists(
+    where: visitWhere,
     limit: number,
     cursor?: { started_at: string; id: string },
   ) {
-    const values: any[] = [searchFilter.id, limit];
+    this.assertSingleFilter(where);
 
-    let cursorClause = ``;
+    const values: any[] = [];
 
-    if (cursor && cursor.id && cursor.started_at) {
-      values.push(cursor.started_at, cursor.id);
-      cursorClause = `AND (
-        started_at < $3
-        OR (started_at = $3 AND id < $4)
-      )`;
+    let paramsIndex = 1;
+    let conditionalClause = [];
+
+    if (where.patient_id) {
+      conditionalClause.push(`patient_id = $${paramsIndex++}`);
+      values.push(where.patient_id);
     }
+
+    if (where.clinic_id) {
+      conditionalClause.push(`clinic_id = $${paramsIndex++}`);
+      values.push(where.clinic_id);
+    }
+
+    if (where.doctor_id) {
+      conditionalClause.push(`doctor_id = $${paramsIndex++}`);
+      values.push(where.doctor_id);
+    }
+
+    if (cursor?.started_at && cursor?.id) {
+      values.push(cursor.started_at, cursor.id);
+      conditionalClause.push(`(
+        started_at < $${paramsIndex}
+        OR (started_at = $${paramsIndex} AND id < $${paramsIndex + 1})
+      )`);
+      paramsIndex += 2;
+    }
+    values.push(limit);
 
     const cursorQuery = `
         SELECT 
@@ -69,8 +96,8 @@ export class VisitRepository {
         started_at,
         completed_at
         FROM visits 
-        WHERE ${searchFilter.type} = $1 ${cursorClause} 
-        ORDER BY started_at DESC, id DESC LIMIT $2`;
+        WHERE  ${conditionalClause.join(" AND ")}
+        ORDER BY started_at DESC, id DESC LIMIT $${paramsIndex}`;
 
     const rows = await query<VisitRow>(cursorQuery, values);
 

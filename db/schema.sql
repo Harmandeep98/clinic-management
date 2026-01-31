@@ -192,7 +192,7 @@ CREATE TABLE public.user_clinic_roles (
     user_role character varying NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT user_clinic_roles_role_check CHECK (((user_role)::text = ANY ((ARRAY['ADMIN'::character varying, 'DOCTOR'::character varying, 'STAFF'::character varying, 'RECEPTIONIST'::character varying])::text[])))
+    CONSTRAINT user_clinic_roles_role_check CHECK (((user_role)::text = ANY ((ARRAY['ADMIN'::character varying, 'DOCTOR'::character varying, 'STAFF'::character varying])::text[])))
 );
 
 
@@ -832,4 +832,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('003'),
     ('004'),
     ('005'),
-    ('006');
+    ('006'),
+    ('007');

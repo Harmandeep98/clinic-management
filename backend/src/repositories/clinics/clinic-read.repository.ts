@@ -1,5 +1,5 @@
 import { PoolClient } from "pg";
-import { AppError } from "../../shared/errors/app-errors.js";
+import { AppError } from "../../shared/errors/app-errors";
 
 export class ClinicReadRepository {
   async getShortCode(client: PoolClient, clinicId: string): Promise<string> {
