@@ -3,7 +3,7 @@ import { AppError } from "../../shared/errors/app-errors";
 import { VisitRepository } from "../../repositories/visits/visit.repository";
 import { ClinicReadRepository } from "../../repositories/clinics/clinic-read.repository.js";
 import { ClinicCounterRepository } from "../../repositories/clinics/clinic-counter.repository.js";
-import { decodeCursor } from "../../shared/pagination/cursor.js";
+import { decodeCursor, encodeCursor } from "../../shared/pagination/cursor.js";
 
 type StartVisitInput = {
   id: string;
@@ -82,8 +82,24 @@ export class VisitService {
   }
 
   async getVisitsByPatient(patientId: string, limit: number, cursor?: string) {
-    const decodedCursor = cursor ? decodeCursor<{started_at: string, id: string}>(cursor) : undefined;
+    const decodedCursor = cursor
+      ? decodeCursor<{ started_at: string; id: string }>(cursor)
+      : undefined;
 
-    const visits =  await this.visitRepo.findVsistsForPatient(patientId, limit, decodedCursor)
+    const visits = await this.visitRepo.findVsistsForPatient(
+      patientId,
+      limit,
+      decodedCursor,
+    );
+
+    const nextCursor =
+      visits.length === limit
+        ? encodeCursor({
+            started_at: visits[visits.length - 1].started_at,
+            id: visits[visits.length - 1].id,
+          })
+        : null;
+
+    return { data: visits, nextCursor };
   }
 }

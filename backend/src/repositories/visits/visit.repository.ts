@@ -44,7 +44,7 @@ export class VisitRepository {
   // Find Visits By PatientId
   async findVsistsForPatient(
     patientId: string,
-    limit: number = 10,
+    limit: number,
     cursor?: { started_at: string; id: string },
   ) {
     const values: any[] = [patientId, limit];

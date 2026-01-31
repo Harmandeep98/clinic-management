@@ -32,4 +32,21 @@ export async function registerVisitRoutes(server: FastifyInstance) {
 
     reply.status(200).send();
   });
+
+  server.get("patients/:patientId/visits", async (request, reply) => {
+    const { patientId } = request.params as { patientId: string };
+
+    const { limit = 20, cursor } = request.query as {
+      limit?: number;
+      cursor?: string;
+    };
+
+    const result = await visitService.getVisitsByPatient(
+      patientId,
+      Math.min(Number(limit), 50),
+      cursor,
+    );
+
+    return result
+  });
 }
