@@ -1,7 +1,7 @@
 import { PoolClient } from "pg";
 import { AppError } from "../../shared/errors/app-errors";
 
-export class ClinicReadRepository {
+class ClinicReadRepository {
   async getShortCode(client: PoolClient, clinicId: string): Promise<string> {
     const res = await client.query(
       `SELECT short_code FROM clinics WHERE id = $1`,
@@ -14,3 +14,5 @@ export class ClinicReadRepository {
     return res.rows[0].short_code;
   }
 }
+
+export const clinicRepo = new ClinicReadRepository();

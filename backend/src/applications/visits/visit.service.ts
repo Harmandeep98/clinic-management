@@ -1,10 +1,11 @@
 import { withTransaction } from "../../infrastructure/db/transaction";
 import { AppError } from "../../shared/errors/app-errors";
-import { VisitRepository } from "../../repositories/visits/visit.repository";
-import { ClinicReadRepository } from "../../repositories/clinics/clinic-read.repository";
-import { ClinicCounterRepository } from "../../repositories/clinics/clinic-counter.repository";
+import { visitRepo } from "../../repositories/visits/visit.repository";
+import { clinicRepo } from "../../repositories/clinics/clinic-read.repository";
+import { counterRepo } from "../../repositories/clinics/clinic-counter.repository";
 import { decodeCursor, encodeCursor } from "../../shared/pagination/cursor";
 import { visitWhere } from "../../repositories/visits/visit.types";
+import { UserPatientLinksRepository } from "../../repositories/userPatientLinks/userPatientLinks.repository.js";
 
 type StartVisitInput = {
   id: string;
@@ -18,15 +19,12 @@ type StartVisitInput = {
 };
 
 export class VisitService {
-  private visitRepo = new VisitRepository();
-  private clinicRepo = new ClinicReadRepository();
-  private counterRepo = new ClinicCounterRepository();
-
   async startVisit(input: StartVisitInput): Promise<void> {
     await withTransaction(async (client) => {
-      const existingVisit = await this.visitRepo.findByAppointmentIdForUpdate(
+      const existingVisit = await visitRepo.findByAppointmentIdForUpdate(
         client,
         input.appointment_id,
+        input.clinic_id,
       );
 
       if (existingVisit) {
@@ -34,21 +32,15 @@ export class VisitService {
       }
 
       // 1️⃣ get clinic short code
-      const shortCode = await this.clinicRepo.getShortCode(
-        client,
-        input.clinic_id,
-      );
+      const shortCode = await clinicRepo.getShortCode(client, input.clinic_id);
 
       // 2️⃣ atomic increment
-      const seq = await this.counterRepo.incrementVisitSeq(
-        client,
-        input.clinic_id,
-      );
+      const seq = await counterRepo.incrementVisitSeq(client, input.clinic_id);
 
       // 3️⃣ generate short readable ref
       const visitRef = `${shortCode}-${seq}`;
 
-      await this.visitRepo.create(client, {
+      await visitRepo.create(client, {
         id: input.id,
         clinic_id: input.clinic_id,
         appointment_id: input.appointment_id,
@@ -59,12 +51,22 @@ export class VisitService {
         visit_ref: visitRef,
         notes: input.notes ?? null,
       });
+
+      await UserPatientLinksRepository.createUserPatientLink(
+        client,
+        input.doctor_id,
+        input.patient_id,
+      );
     });
   }
 
-  async completeVisit(visitId: string): Promise<void> {
+  async completeVisit(visitId: string, clinicId: string): Promise<void> {
     await withTransaction(async (client) => {
-      const visit = await this.visitRepo.findByIdForUpdate(client, visitId);
+      const visit = await visitRepo.findByIdForUpdate(
+        client,
+        visitId,
+        clinicId,
+      );
 
       if (!visit) {
         throw new AppError("Visit not found", 404);
@@ -78,16 +80,26 @@ export class VisitService {
         throw new AppError("Visit cannot be completed in current status", 409);
       }
 
-      await this.visitRepo.markCompleted(client, visitId, new Date());
+      await visitRepo.markCompleted(client, visitId, new Date(), clinicId);
     });
   }
 
-  async getVisits(where: visitWhere, limit: number, cursor?: string) {
+  async getVisits(
+    where: visitWhere,
+    limit: number,
+    cursor?: string,
+    clinicId?: string | null,
+  ) {
     const decodedCursor = cursor
       ? decodeCursor<{ started_at: string; id: string }>(cursor)
       : undefined;
 
-    const visits = await this.visitRepo.findVsists(where, limit, decodedCursor);
+    const visits = await visitRepo.findVsists(
+      where,
+      limit,
+      decodedCursor,
+      clinicId,
+    );
 
     const nextCursor =
       visits.length === limit
@@ -104,15 +116,21 @@ export class VisitService {
     patientId: string,
     limit: number,
     cursor?: string,
+    clinicId?: string,
   ) {
-    return this.getVisits({ patient_id: patientId }, limit, cursor);
+    return this.getVisits({ patient_id: patientId }, limit, cursor, clinicId);
   }
 
   async getVisitsForClinics(clinicId: string, limit: number, cursor?: string) {
     return this.getVisits({ clinic_id: clinicId }, limit, cursor);
   }
 
-  async getVisitsForDoctors(doctorId: string, limit: number, cursor?: string) {
-    return this.getVisits({ doctor_id: doctorId }, limit, cursor);
+  async getVisitsForDoctors(
+    doctorId: string,
+    limit: number,
+    cursor?: string,
+    clinicId?: string,
+  ) {
+    return this.getVisits({ doctor_id: doctorId }, limit, cursor, clinicId);
   }
 }

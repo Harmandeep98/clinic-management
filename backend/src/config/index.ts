@@ -1,18 +1,4 @@
-type AppConfig = {
-  port: number;
-  env: "development" | "production" | "test";
-
-  db: {
-    ssl: boolean;
-    connectionUri: string;
-  };
-
-  redis: {
-    host: string;
-    port: number;
-    password: string;
-  };
-};
+import { AppConfig } from "./config.types.js";
 
 function getEnv(name: string, defaultValue?: string): string {
   const value = process.env[name] ?? defaultValue;
@@ -50,6 +36,13 @@ export function loadConfig(): AppConfig {
       host: getEnv("REDIS_HOST", "127.0.0.1"),
       port: redisPort,
       password: getEnv("REDIS_PASSWORD", ""),
+    },
+    jwt: {
+      secret: getEnv("JWT_SECRET", ""),
+      verify: {
+        allowedAud: "clinic-api",
+        allowedIss: "clinic-app",
+      },
     },
   };
 }

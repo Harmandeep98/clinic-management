@@ -2,7 +2,7 @@ import { PoolClient } from "pg";
 import { VisitRow, visitWhere } from "./visit.types";
 import { query } from "../../infrastructure/db/query";
 
-export class VisitRepository {
+class VisitRepository {
   private assertSingleFilter(where: visitWhere) {
     const active = Object.values(where).filter(Boolean).length;
     if (active !== 1) {
@@ -30,9 +30,10 @@ export class VisitRepository {
   async findByAppointmentIdForUpdate(
     client: PoolClient,
     id: string,
+    clinicId: string,
   ): Promise<VisitRow | null> {
-    const findByIdQuery = `SELECT * FROM visits WHERE appointment_id = $1`;
-    const res = await client.query<VisitRow>(findByIdQuery, [id]);
+    const findByIdQuery = `SELECT * FROM visits WHERE appointment_id = $1 AND clinic_id = $2`;
+    const res = await client.query<VisitRow>(findByIdQuery, [id, clinicId]);
 
     return res.rows[0] ?? null;
   }
@@ -41,9 +42,10 @@ export class VisitRepository {
   async findByIdForUpdate(
     client: PoolClient,
     id: string,
+    clinicId: string,
   ): Promise<VisitRow | null> {
-    const findByIdQuery = `SELECT * FROM visits WHERE id = $1`;
-    const res = await client.query<VisitRow>(findByIdQuery, [id]);
+    const findByIdQuery = `SELECT * FROM visits WHERE id = $1 AND clinic_id = $2`;
+    const res = await client.query<VisitRow>(findByIdQuery, [id, clinicId]);
 
     return res.rows[0] ?? null;
   }
@@ -53,13 +55,18 @@ export class VisitRepository {
     where: visitWhere,
     limit: number,
     cursor?: { started_at: string; id: string },
+    clinicId?: string | null,
   ) {
     this.assertSingleFilter(where);
 
     const values: any[] = [];
-
-    let paramsIndex = 1;
     let conditionalClause = [];
+    let paramsIndex = 1;
+
+    if (clinicId) {
+      values.push(clinicId);
+      conditionalClause.push(`clinic_id = ${paramsIndex++}`);
+    }
 
     if (where.patient_id) {
       conditionalClause.push(`patient_id = $${paramsIndex++}`);
@@ -104,6 +111,19 @@ export class VisitRepository {
     return rows;
   }
 
+  // Get Doctor Id for visit
+  async getDoctorIdByVisitId(visitId: string): Promise<string | null> {
+    const rows = await query<{ doctor_id: string }>(
+      `
+      SELECT doctor_id
+      FROM visits
+      WHERE id = $1
+      `,
+      [visitId],
+    );
+
+    return rows[0]?.doctor_id ?? null;
+  }
   // Create New visit with (transaction required)
   async create(
     client: PoolClient,
@@ -130,7 +150,7 @@ export class VisitRepository {
       visit_ref,
       notes
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)  
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) WHERE clininc_id = $2
     `;
 
     await client.query(writeVisistQuery, [
@@ -151,13 +171,16 @@ export class VisitRepository {
     client: PoolClient,
     visitId: string,
     completedAt: Date,
+    clinicId: string,
   ): Promise<void> {
     const markCompleteQuery = `
       UPDATE visits
       SET visit_status = 'COMPLETED',
           completed_at = $2
-      WHERE id = $1
+      WHERE id = $1 AND clinic_id = $3
       `;
-    await client.query(markCompleteQuery, [visitId, completedAt]);
+    await client.query(markCompleteQuery, [visitId, completedAt, clinicId]);
   }
 }
+
+export const visitRepo = new VisitRepository();

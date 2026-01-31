@@ -1,15 +1,17 @@
 import Fastify, { FastifyInstance } from "fastify";
-import { idempotencyMiddleware } from "./http/middlewares/idempotency.middleware";
 import { registerVisitRoutes } from "./http/visits/visit.routes";
 import { globalErrorHandler } from "./infrastructure/errors/error-handler";
+import { idempotencyMiddleware } from "./http/middlewares/idemopotency/idempotency.middleware.js";
 import { idempotencyOnSendHook } from "./http/hooks/idempotency.hooks";
 import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
 import fs from "fs";
 import path from "path";
 import yaml from "yaml";
+import fastifyJwt from "@fastify/jwt";
+import { AppConfig } from "./config/config.types.js";
 
-export function createServer(): FastifyInstance {
+export function createServer(config: AppConfig): FastifyInstance {
   const server = Fastify({
     logger: true,
   });
@@ -31,6 +33,8 @@ export function createServer(): FastifyInstance {
   server.register(swaggerUI, {
     routePrefix: "/docs",
   });
+
+  server.register(fastifyJwt, config.jwt);
 
   server.addHook("preHandler", idempotencyMiddleware);
 

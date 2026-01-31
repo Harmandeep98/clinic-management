@@ -8,7 +8,7 @@ import { createServer } from "./server";
 
 async function bootStrap() {
   const config = loadConfig();
-  const server = createServer();
+  const server = createServer(config);
 
   createDbPool(config.db);
   createRedisClient(config.redis);

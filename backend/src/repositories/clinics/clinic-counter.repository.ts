@@ -1,6 +1,6 @@
 import { PoolClient } from "pg";
 
-export class ClinicCounterRepository {
+class ClinicCounterRepository {
   async incrementVisitSeq(
     client: PoolClient,
     clinicId: string,
@@ -20,3 +20,5 @@ export class ClinicCounterRepository {
     return result.rows[0].visit_seq;
   }
 }
+
+export const counterRepo = new ClinicCounterRepository();
