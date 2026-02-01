@@ -44,5 +44,9 @@ export function loadConfig(): AppConfig {
         allowedIss: "clinic-app",
       },
     },
+    otpSecret: getEnv("OTP_SECRET", ""),
+    messageing: {
+      authKey: getEnv("MESSAGE_AUTH_KEY", ""),
+    },
   };
 }

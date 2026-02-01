@@ -1,0 +1,1 @@
+type OtpType = "PHONE" | "EMAIL";

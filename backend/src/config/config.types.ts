@@ -20,4 +20,10 @@ export type AppConfig = {
       allowedIss: string;
     };
   };
+
+  otpSecret: string;
+
+  messageing: {
+    authKey: string;
+  };
 };

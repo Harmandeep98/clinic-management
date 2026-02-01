@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { getRedisClient } from "../../infrastructure/redis/client";
 import { z } from "zod";
+import { getRedisClient } from "../../../infrastructure/redis/client";
 
 const IDEMPOTENCY_TLL_SECONDS = 600;
 

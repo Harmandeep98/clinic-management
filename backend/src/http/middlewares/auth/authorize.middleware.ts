@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { AppError } from "../../../shared/errors/app-errors.js";
-import { Role } from "../../../shared/auth/auth.types.js";
+import { AppError } from "../../../shared/errors/app-errors";
+import { Role } from "../../../shared/auth/auth.types";
 
 const ROLE_PERMISSIONS: Record<Role, string[]> = {
   ADMIN: [
