@@ -1,6 +1,6 @@
 import { FastifyRequest } from "fastify";
-import { UserPatientLinksRepository } from "../../../repositories/userPatientLinks/userPatientLinks.repository.js";
-import { AppError } from "../../../shared/errors/app-errors.js";
+import { UserPatientLinksRepository } from "../../../repositories/userPatientLinks/userPatientLinks.repository";
+import { AppError } from "../../../shared/errors/app-errors";
 
 export async function requirePatientAccess(request: FastifyRequest) {
   const { patientId } = request.params as { patientId: string };

@@ -1,7 +1,7 @@
 import Fastify, { FastifyInstance } from "fastify";
 import { registerVisitRoutes } from "./http/visits/visit.routes";
 import { globalErrorHandler } from "./infrastructure/errors/error-handler";
-import { idempotencyMiddleware } from "./http/middlewares/idemopotency/idempotency.middleware.js";
+import { idempotencyMiddleware } from "./http/middlewares/idemopotency/idempotency.middleware";
 import { idempotencyOnSendHook } from "./http/hooks/idempotency.hooks";
 import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
@@ -9,7 +9,7 @@ import fs from "fs";
 import path from "path";
 import yaml from "yaml";
 import fastifyJwt from "@fastify/jwt";
-import { AppConfig } from "./config/config.types.js";
+import { AppConfig } from "./config/config.types";
 
 export function createServer(config: AppConfig): FastifyInstance {
   const server = Fastify({

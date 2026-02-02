@@ -1,8 +1,12 @@
 import z from "zod";
 
-export const authSchema = z.object({
-  phone_number: z.string().optional(),
-  email: z.email().optional(),
+export const patientLoginSchema = z.object({
+  phoneNumber: z.string(),
 });
 
-export type authType = z.infer<typeof authSchema>;
+export type patientLoginType = z.infer<typeof patientLoginSchema>;
+
+export const patientOtpVerifySchema = z.object({
+  phoneNumber: z.string(),
+  otp: z.string(),
+});

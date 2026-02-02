@@ -1,4 +1,4 @@
-import { AppConfig } from "./config.types.js";
+import { AppConfig } from "./config.types";
 
 function getEnv(name: string, defaultValue?: string): string {
   const value = process.env[name] ?? defaultValue;
@@ -40,9 +40,11 @@ export function loadConfig(): AppConfig {
     jwt: {
       secret: getEnv("JWT_SECRET", ""),
       verify: {
-        allowedAud: "clinic-api",
-        allowedIss: "clinic-app",
+        allowedIss: "clinic-api",
+        allowedAud: ["clinic-app", "clinic-web"] as const,
       },
+      expiresIn: Number(getEnv("JWT_EXP", "0")),
+      rfExpiry: Number(getEnv("JWT_EXP", "0")),
     },
     otpSecret: getEnv("OTP_SECRET", ""),
     messageing: {

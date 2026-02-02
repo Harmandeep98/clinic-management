@@ -1,6 +1,6 @@
 import { randomInt, timingSafeEqual } from "crypto";
 import { createHmac } from "crypto";
-import { loadConfig } from "../../config/index.js";
+import { loadConfig } from "../../config/index";
 
 const config = loadConfig();
 

@@ -1,3 +1,7 @@
-class AuthRepository {}
+import { UserType } from "../users/user.types";
 
-export const authRepo = new AuthRepository();
+class AuthRepository {
+  async saveRefershToken(userId: string, token: string, type: UserType) {
+    
+  }
+}

@@ -18,12 +18,13 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@fastify/jwt": "^10.0.0",
     "@fastify/swagger": "^9.6.1",
     "@fastify/swagger-ui": "^5.2.4",
+    "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.13.4",
     "fastify": "^5.7.1",
     "ioredis": "^5.9.2",
+    "jsonwebtoken": "^9.0.3",
     "pg": "^8.17.2",
     "ts-node": "^10.9.2",
     "uuid": "^13.0.0",

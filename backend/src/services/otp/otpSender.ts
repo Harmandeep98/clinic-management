@@ -1,4 +1,4 @@
-import { smsClient } from "../../infrastructure/messageing/smsClient.js";
+import { smsClient } from "../../infrastructure/messageing/smsClient";
 
 class OtpSender {
   async sendOtp(

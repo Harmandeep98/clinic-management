@@ -5,7 +5,7 @@ import { clinicRepo } from "../../repositories/clinics/clinic-read.repository";
 import { counterRepo } from "../../repositories/clinics/clinic-counter.repository";
 import { decodeCursor, encodeCursor } from "../../shared/pagination/cursor";
 import { visitWhere } from "../../repositories/visits/visit.types";
-import { UserPatientLinksRepository } from "../../repositories/userPatientLinks/userPatientLinks.repository.js";
+import { UserPatientLinksRepository } from "../../repositories/userPatientLinks/userPatientLinks.repository";
 
 type StartVisitInput = {
   id: string;

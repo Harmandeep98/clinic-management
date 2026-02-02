@@ -1,6 +1,6 @@
 import { PoolClient } from "pg";
-import { query } from "../../infrastructure/db/query.js";
-import { generateId } from "../../shared/id/uuid.js";
+import { query } from "../../infrastructure/db/query";
+import { generateId } from "../../shared/id/uuid";
 
 export class UserPatientLinks {
   async existsActiveLink(userId: string, patientId: string): Promise<boolean> {

@@ -1,6 +1,6 @@
 import { FastifyRequest } from "fastify";
-import { AppError } from "../../../shared/errors/app-errors.js";
-import { visitRepo } from "../../../repositories/visits/visit.repository.js";
+import { AppError } from "../../../shared/errors/app-errors";
+import { visitRepo } from "../../../repositories/visits/visit.repository";
 
 export async function requireDoctorOwnership(request: FastifyRequest) {
   const { visitId } = request.params as { visitId: string };

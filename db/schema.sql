@@ -95,12 +95,24 @@ CREATE TABLE public.clinics (
 
 
 --
+-- Name: doctor_clinic_link; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.doctor_clinic_link (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    doctor_id uuid NOT NULL,
+    clinic_id uuid NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: doctors; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.doctors (
     id uuid NOT NULL,
-    clinic_id uuid NOT NULL,
     full_name character varying NOT NULL,
     specialization character varying NOT NULL,
     registration_number character varying,
@@ -136,12 +148,24 @@ CREATE TABLE public.lab_reports (
 
 
 --
+-- Name: patient_clinic_link; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.patient_clinic_link (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    patient_id uuid NOT NULL,
+    clinic_id uuid NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: patients; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.patients (
     id uuid NOT NULL,
-    clinic_id uuid NOT NULL,
     full_name character varying NOT NULL,
     dob date NOT NULL,
     gender character varying NOT NULL,
@@ -206,6 +230,21 @@ CREATE TABLE public.user_patient_links (
     patient_id uuid NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: user_refresh_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_refresh_tokens (
+    id uuid NOT NULL,
+    token_hash text NOT NULL,
+    user_id uuid NOT NULL,
+    user_type character varying NOT NULL,
+    is_revoked boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -287,6 +326,14 @@ ALTER TABLE ONLY public.clinics
 
 
 --
+-- Name: doctor_clinic_link doctor_clinic_link_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.doctor_clinic_link
+    ADD CONSTRAINT doctor_clinic_link_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: doctors doctors_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -300,6 +347,14 @@ ALTER TABLE ONLY public.doctors
 
 ALTER TABLE ONLY public.lab_reports
     ADD CONSTRAINT lab_reports_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: patient_clinic_link patient_clinic_link_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.patient_clinic_link
+    ADD CONSTRAINT patient_clinic_link_pkey PRIMARY KEY (id);
 
 
 --
@@ -335,6 +390,30 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: user_refresh_tokens unique_refresh_token; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_refresh_tokens
+    ADD CONSTRAINT unique_refresh_token UNIQUE (token_hash);
+
+
+--
+-- Name: doctor_clinic_link uq_doctor_clinic; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.doctor_clinic_link
+    ADD CONSTRAINT uq_doctor_clinic UNIQUE (doctor_id, clinic_id);
+
+
+--
+-- Name: patient_clinic_link uq_patient_clinic; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.patient_clinic_link
+    ADD CONSTRAINT uq_patient_clinic UNIQUE (patient_id, clinic_id);
+
+
+--
 -- Name: user_clinic_roles user_clinic_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -364,6 +443,14 @@ ALTER TABLE ONLY public.user_patient_links
 
 ALTER TABLE ONLY public.user_patient_links
     ADD CONSTRAINT user_patient_links_unique UNIQUE (user_id, patient_id);
+
+
+--
+-- Name: user_refresh_tokens user_refresh_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_refresh_tokens
+    ADD CONSTRAINT user_refresh_tokens_pkey PRIMARY KEY (id);
 
 
 --
@@ -454,6 +541,34 @@ CREATE INDEX clinics_status_idx ON public.clinics USING btree (clinic_status);
 
 
 --
+-- Name: idx_doctor_clinic_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_doctor_clinic_active ON public.doctor_clinic_link USING btree (doctor_id, clinic_id) WHERE (is_active = true);
+
+
+--
+-- Name: idx_doctor_clinic_clinic_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_doctor_clinic_clinic_active ON public.doctor_clinic_link USING btree (clinic_id) WHERE (is_active = true);
+
+
+--
+-- Name: idx_patient_clinic_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_patient_clinic_active ON public.patient_clinic_link USING btree (patient_id, clinic_id) WHERE (is_active = true);
+
+
+--
+-- Name: idx_patient_clinic_clinic_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_patient_clinic_clinic_active ON public.patient_clinic_link USING btree (clinic_id) WHERE (is_active = true);
+
+
+--
 -- Name: lab_reports_clinic_uploaded_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -472,13 +587,6 @@ CREATE INDEX lab_reports_patient_active_idx ON public.lab_reports USING btree (p
 --
 
 CREATE INDEX lab_reports_visit_active_idx ON public.lab_reports USING btree (visit_id) WHERE (is_deleted = false);
-
-
---
--- Name: patients_clinic_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX patients_clinic_idx ON public.patients USING btree (clinic_id);
 
 
 --
@@ -514,6 +622,13 @@ CREATE INDEX prescriptions_doctor_idx ON public.prescriptions USING btree (docto
 --
 
 CREATE INDEX prescriptions_patient_idx ON public.prescriptions USING btree (patient_id);
+
+
+--
+-- Name: user_hashed_token; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX user_hashed_token ON public.user_refresh_tokens USING btree (token_hash);
 
 
 --
@@ -664,11 +779,19 @@ ALTER TABLE ONLY public.clinic_counters
 
 
 --
--- Name: doctors doctors_clinic_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: doctor_clinic_link doctor_clinic_link_clinic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.doctors
-    ADD CONSTRAINT doctors_clinic_fk FOREIGN KEY (clinic_id) REFERENCES public.clinics(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.doctor_clinic_link
+    ADD CONSTRAINT doctor_clinic_link_clinic_id_fkey FOREIGN KEY (clinic_id) REFERENCES public.clinics(id) ON DELETE CASCADE;
+
+
+--
+-- Name: doctor_clinic_link doctor_clinic_link_doctor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.doctor_clinic_link
+    ADD CONSTRAINT doctor_clinic_link_doctor_id_fkey FOREIGN KEY (doctor_id) REFERENCES public.doctors(id) ON DELETE CASCADE;
 
 
 --
@@ -712,11 +835,19 @@ ALTER TABLE ONLY public.lab_reports
 
 
 --
--- Name: patients patients_clinic_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: patient_clinic_link patient_clinic_link_clinic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.patients
-    ADD CONSTRAINT patients_clinic_fk FOREIGN KEY (clinic_id) REFERENCES public.clinics(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.patient_clinic_link
+    ADD CONSTRAINT patient_clinic_link_clinic_id_fkey FOREIGN KEY (clinic_id) REFERENCES public.clinics(id) ON DELETE CASCADE;
+
+
+--
+-- Name: patient_clinic_link patient_clinic_link_patient_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.patient_clinic_link
+    ADD CONSTRAINT patient_clinic_link_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
 
 
 --
@@ -828,9 +959,12 @@ ALTER TABLE ONLY public.visits
 
 INSERT INTO public.schema_migrations (version) VALUES
     ('001'),
+    ('0010'),
     ('002'),
     ('003'),
     ('004'),
     ('005'),
     ('006'),
-    ('007');
+    ('007'),
+    ('008'),
+    ('009');

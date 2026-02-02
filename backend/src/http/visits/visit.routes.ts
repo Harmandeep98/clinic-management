@@ -2,10 +2,10 @@ import { FastifyInstance } from "fastify";
 import { CompleteVisitSchema, StartVisitSchema } from "./visit.schemas";
 import { generateId } from "../../shared/id/uuid";
 import { VisitService } from "../../applications/visits/visit.service";
-import { authenticate } from "../middlewares/auth/authenticate.middleware.js";
-import { authorize } from "../middlewares/auth/authorize.middleware.js";
-import { requirePatientAccess } from "../middlewares/ownership/patientAccess.middleware.js";
-import { requireDoctorOwnership } from "../middlewares/ownership/doctorAccess.middleware.js";
+import { authenticate } from "../middlewares/auth/authenticate.middleware";
+import { authorize } from "../middlewares/auth/authorize.middleware";
+import { requirePatientAccess } from "../middlewares/ownership/patientAccess.middleware";
+import { requireDoctorOwnership } from "../middlewares/ownership/doctorAccess.middleware";
 
 export async function registerVisitRoutes(server: FastifyInstance) {
   const visitService = new VisitService();

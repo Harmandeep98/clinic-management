@@ -16,9 +16,11 @@ export type AppConfig = {
   jwt: {
     secret: string;
     verify: {
-      allowedAud: string;
       allowedIss: string;
+      allowedAud: readonly [string, ...string[]];
     };
+    expiresIn: number;
+    rfExpiry: number;
   };
 
   otpSecret: string;
