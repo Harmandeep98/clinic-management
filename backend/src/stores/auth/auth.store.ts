@@ -27,6 +27,13 @@ class AuthStore {
     const key = this.key(userId, token);
     await this.redis.del(key);
   }
+
+  async getRefreshToken(token: string, userId: string): Promise<string | null> {
+    const key = this.key(userId, token);
+    const result = await this.redis.get(key);
+    return result ?? null;
+  }
+  
 }
 
 export const authStore = new AuthStore();

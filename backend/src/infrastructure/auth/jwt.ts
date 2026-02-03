@@ -21,6 +21,10 @@ export function verifyJwt<T>(token: string): T {
   }) as T;
 }
 
-export function getJwtSessionToken<T extends object>(payload: T) {
-  const jwtConfig = loadConfig().jwt;
+export function decodeJwt<T>(token: string): T | null { 
+  const decoded = jwt.decode(token);
+  if (!decoded || typeof decoded === 'string') {
+    return null;
+  }
+  return decoded as T;
 }
