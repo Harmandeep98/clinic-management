@@ -8,10 +8,10 @@ import swaggerUI from "@fastify/swagger-ui";
 import fs from "fs";
 import path from "path";
 import yaml from "yaml";
-import fastifyJwt from "@fastify/jwt";
-import { AppConfig } from "./config/config.types";
+import { registerUserRoutes } from "./http/users/user.routes";
+import { registerAuthRoutes } from "./http/auth/auth.routes";
 
-export function createServer(config: AppConfig): FastifyInstance {
+export function createServer(): FastifyInstance {
   const server = Fastify({
     logger: true,
   });
@@ -34,8 +34,6 @@ export function createServer(config: AppConfig): FastifyInstance {
     routePrefix: "/docs",
   });
 
-  server.register(fastifyJwt, config.jwt);
-
   server.addHook("preHandler", idempotencyMiddleware);
 
   server.addHook("onSend", idempotencyOnSendHook);
@@ -44,7 +42,12 @@ export function createServer(config: AppConfig): FastifyInstance {
     return { status: "ok" };
   });
 
+  registerAuthRoutes(server);
+
+  registerUserRoutes(server);
+  
   registerVisitRoutes(server);
+
 
   server.setErrorHandler(globalErrorHandler);
 

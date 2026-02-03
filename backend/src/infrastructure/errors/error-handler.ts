@@ -15,6 +15,7 @@ export function globalErrorHandler(
 
     return reply.status(error.statusCode).send({
       error: error.message,
+      code: error.code ?? "APPLICATION ERROR",
     });
   }
 
@@ -23,15 +24,30 @@ export function globalErrorHandler(
   if (pgError) {
     return reply.status(pgError.statusCode).send({
       error: pgError.message,
-      code: error.code,
+      code: "DB ERROR",
     });
   }
 
-  // 3. Fastify validation errors (Zod)
+  // 3. Zod validation errors
+  if (error.name === "ZodError" && Array.isArray((error as any).issues)) {
+    const issues = (error as any).issues as Array<{
+      path: (string | number)[];
+      message: string;
+    }>;
+
+    return reply.status(400).send({
+      error: issues
+        .map((issue, index) => `${index + 1}. ${issue.message}`)
+        .join("\n"),
+      code: "VALIDATION_ERROR",
+    });
+  }
+
+  // 4. Fastify validation errors (legacy)
   if ((error as any).validation) {
     return reply.status(400).send({
-      error: "Invalid request",
-      details: (error as any).validation,
+      error: (error as any).validation,
+      code: "INVALID REQUEST",
     });
   }
 
@@ -39,5 +55,6 @@ export function globalErrorHandler(
 
   reply.status(500).send({
     error: "Internal Server Error",
+    code: "SERVER ERROR",
   });
 }

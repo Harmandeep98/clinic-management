@@ -170,7 +170,6 @@ CREATE TABLE public.patients (
     dob date NOT NULL,
     gender character varying NOT NULL,
     phone_number character varying,
-    external_ref character varying,
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -590,13 +589,6 @@ CREATE INDEX lab_reports_visit_active_idx ON public.lab_reports USING btree (vis
 
 
 --
--- Name: patients_external_ref_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX patients_external_ref_idx ON public.patients USING btree (external_ref);
-
-
---
 -- Name: patients_phone_number_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -960,6 +952,7 @@ ALTER TABLE ONLY public.visits
 INSERT INTO public.schema_migrations (version) VALUES
     ('001'),
     ('0010'),
+    ('0011'),
     ('002'),
     ('003'),
     ('004'),

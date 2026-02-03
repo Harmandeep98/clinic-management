@@ -27,7 +27,7 @@ export function loadConfig(): AppConfig {
 
   return {
     env: env as AppConfig["env"],
-    port: Number(getEnv("PORT", "3000")),
+    port: Number(getEnv("PORT", "4000")),
     db: {
       ssl: ssl,
       connectionUri: getEnv("DATABASE_URL", ""),
@@ -43,8 +43,8 @@ export function loadConfig(): AppConfig {
         allowedIss: "clinic-api",
         allowedAud: ["clinic-app", "clinic-web"] as const,
       },
-      expiresIn: Number(getEnv("JWT_EXP", "0")),
-      rfExpiry: Number(getEnv("JWT_EXP", "0")),
+      expiresIn: getEnv("JWT_EXP", "10m"),
+      rfExpiry: getEnv("JWT_RF_EXP", "7h"),
     },
     otpSecret: getEnv("OTP_SECRET", ""),
     messageing: {

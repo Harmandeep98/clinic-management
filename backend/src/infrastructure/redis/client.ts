@@ -13,8 +13,13 @@ export function createRedisClient(config: RedisConfig) {
     host: config.host,
     port: config.port,
     password: config.password,
-    lazyConnect: true,
     maxRetriesPerRequest: 3,
+    retryStrategy: (times) => {
+      if (times > 3) {
+        return null;
+      }
+      return Math.min(times * 200, 2000);
+    },
   });
 }
 

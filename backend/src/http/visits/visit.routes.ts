@@ -47,7 +47,7 @@ export async function registerVisitRoutes(server: FastifyInstance) {
     async (request, reply) => {
       const parsed = CompleteVisitSchema.parse((request.params as any).visitId);
 
-      await visitService.completeVisit(parsed.visit_id, request.auth.clinicId);
+      await visitService.completeVisit(parsed.visit_id, request.auth.clinicId as string);
 
       reply.status(200).send();
     },
@@ -70,7 +70,7 @@ export async function registerVisitRoutes(server: FastifyInstance) {
         patientId,
         Math.min(Number(limit), 50),
         cursor,
-        request.auth.clinicId,
+        request.auth.clinicId as string,
       );
 
       reply.status(200).send(result);
@@ -94,7 +94,7 @@ export async function registerVisitRoutes(server: FastifyInstance) {
         doctorId,
         Math.min(Number(limit), 50),
         cursor,
-        request.auth.clinicId,
+        request.auth.clinicId as string,
       );
 
       reply.status(200).send(result);

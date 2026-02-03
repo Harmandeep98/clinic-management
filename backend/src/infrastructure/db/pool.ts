@@ -8,7 +8,6 @@ type DB_CONFIG = {
 };
 
 export function createDbPool(config: DB_CONFIG) {
-  console.log(config.connectionUri);
   pool = new Pool({
     connectionString: config.connectionUri,
     ssl: config.ssl ? { rejectUnauthorized: false } : false,

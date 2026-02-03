@@ -1,7 +1,37 @@
+import { PoolClient } from "pg";
+import {
+  patientRegisterType,
+  userRegisterType,
+} from "../../http/users/user.schemas";
 import { query } from "../../infrastructure/db/query";
-import { UserType, UserWhere } from "./user.types";
+import { UserType, UserWhere } from "./users.types";
 
 class UserRepository {
+  async createOrUpdateUser(client: PoolClient, userData: userRegisterType) {
+    const values = [userData.id];
+    let conditional = "";
+    if (userData.phoneNumber) {
+      conditional = "phone_number";
+      values.push(userData.phoneNumber);
+    } else if (userData.email) {
+      conditional = "email";
+      values.push(userData.email);
+    }
+    const insertQuery = `INSERT INTO
+      users (id, ${conditional}, is_active)
+      VALUES ($1, $2, true)
+      ON CONFLICT (id) DO UPDATE SET
+        ${conditional} = EXCLUDED.${conditional},
+        is_active = true
+    `;
+
+    await client.query(insertQuery, values);
+  }
+}
+
+export const userRepository = new UserRepository();
+
+class PatientRepository {
   private assertSingleFilter(where: UserWhere) {
     const active = Object.values(where).filter(Boolean).length;
     if (active !== 1) {
@@ -9,20 +39,28 @@ class UserRepository {
     }
   }
 
-  async checkPatientUserExists(phone_number: string): Promise<boolean> {
-    const result = await query<{ eixts: boolean }>(
-      `
-        SELECT EXISTS (
-          SELECT 1
-          FROM users
-          WHERE phone_number = $1
-            AND is_active = true
-        )
-      `,
-      [phone_number],
-    );
+  async checkPatientUserExists(
+    phone_number: string,
+    client?: PoolClient,
+  ): Promise<boolean> {
+    const sql = `
+      SELECT EXISTS (
+        SELECT 1
+        FROM users
+        WHERE phone_number = $1
+          AND is_active = true
+      ) as exists
+    `;
 
-    return result[0]?.eixts ?? false;
+    if (client) {
+      const result = await client.query<{ exists: boolean }>(sql, [
+        phone_number,
+      ]);
+      return result.rows[0]?.exists ?? false;
+    } else {
+      const result = await query<{ exists: boolean }>(sql, [phone_number]);
+      return result[0]?.exists ?? false;
+    }
   }
 
   async getPatientUser(
@@ -32,7 +70,7 @@ class UserRepository {
       SELECT u.id AS user_id,
         p.id AS patient_id
         FROM users u
-          LEFT JOIN patients p ON p.user_id = u.id
+          LEFT JOIN patients p ON p.id = u.id
           AND p.is_active = true
         WHERE u.phone_number = $1 AND u.is_active = true
         ORDER BY u.created_at DESC
@@ -51,6 +89,33 @@ class UserRepository {
       userId: rows[0].user_id,
       patientId: rows[0].patient_id,
     };
+  }
+
+  async createOrUpdatePatient(
+    client: PoolClient,
+    patientData: patientRegisterType,
+  ): Promise<void> {
+    const insertQuery = `INSERT INTO
+      patients (id, full_name, dob, gender, phone_number, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (id) DO UPDATE SET
+        full_name = EXCLUDED.full_name,
+        dob = EXCLUDED.dob,
+        gender = EXCLUDED.gender,
+        phone_number = EXCLUDED.phone_number,
+        is_active = true
+    `;
+
+    const values = [
+      patientData.id,
+      patientData.fullName,
+      patientData.dob,
+      patientData.gender,
+      patientData.phoneNumber,
+      true,
+    ];
+    console.log(patientData);
+    await client.query(insertQuery, values);
   }
 
   async getUserContext(
@@ -127,4 +192,4 @@ class UserRepository {
   }
 }
 
-export const userRepository = new UserRepository();
+export const patientRepository = new PatientRepository();

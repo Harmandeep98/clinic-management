@@ -1,5 +1,5 @@
 import { getRedisClient } from "../../infrastructure/redis/client";
-import { UserType } from "../../repositories/users/user.types";
+import { UserType } from "../../repositories/users/users.types";
 
 type storeOtp = {
   attemps: number;
@@ -7,7 +7,14 @@ type storeOtp = {
 };
 
 class OtpStore {
-  private redis = getRedisClient();
+  private _redis: ReturnType<typeof getRedisClient> | null = null;
+
+  private get redis() {
+    if (!this._redis) {
+      this._redis = getRedisClient();
+    }
+    return this._redis;
+  }
 
   private key(phoneNumber: string, type: UserType, clincId?: string) {
     let nuance = "";
@@ -31,7 +38,6 @@ class OtpStore {
       JSON.stringify(data),
       "EX",
       TTL_OTP,
-      "NX",
     );
 
     return redisResult === "OK";

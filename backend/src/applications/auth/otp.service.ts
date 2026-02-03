@@ -1,4 +1,4 @@
-import { UserType } from "../../repositories/users/user.types";
+import { UserType } from "../../repositories/users/users.types";
 import { AppError } from "../../shared/errors/app-errors";
 import { compareOtp, generateOtp, hashOtp } from "../../shared/otp/otp";
 import { otpStore } from "../../stores/otp/otp.store";
@@ -21,13 +21,21 @@ class AuthOtpService {
     );
 
     if (!result) {
-      throw new AppError("OTP sending failed", 503, "OTP_SENDING_FAIL");
+      throw new AppError(
+        "Unable to send verification code at the moment",
+        503,
+        "OTP_SENDING_FAIL",
+      );
     }
 
     const sent = await otpSender.sendOtp(otp, phoneNumber, "PHONE");
 
     if (!sent) {
-      throw new AppError("OTP delivery failed", 503, "OTP_SENDING_FAILED");
+      throw new AppError(
+        "Unable to send verification code at the moment",
+        503,
+        "OTP_SENDING_FAILED",
+      );
     }
 
     return {
@@ -43,17 +51,17 @@ class AuthOtpService {
     clincId?: string,
   ) {
     const storedHash = await otpStore.getOtp(phoneNumber, type, clincId);
-
     if (!storedHash || storedHash.attemps == 3)
       throw new AppError(
         "Invalid verification code or this verification code is no longer valid",
         403,
         "INVALID_OTP",
       );
+      
+    await otpStore.incrementOtpAttempts(phoneNumber, type, clincId);
 
     const hashedOtp = hashOtp(otp);
     const isValid = compareOtp(hashedOtp, storedHash.hash);
-
     if (!isValid) {
       throw new AppError(
         "Invalid verification code or this verification code is no longer valid",

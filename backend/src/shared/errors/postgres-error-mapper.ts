@@ -2,7 +2,7 @@ import { AppError } from "./app-errors";
 
 export function mapPostgresError(error: any): AppError | null {
   if (!error?.code) return null;
-
+  console.log(error)
   switch (error.code) {
     case "23505":
       return new AppError("Duplicate resource", 409, "UNIQUE_VIOLATION");
