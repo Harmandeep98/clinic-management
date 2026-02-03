@@ -19,8 +19,8 @@ export type AppConfig = {
       allowedIss: string;
       allowedAud: readonly [string, ...string[]];
     };
-    expiresIn: number;
-    rfExpiry: number;
+    expiresIn: string;
+    rfExpiry: string;
   };
 
   otpSecret: string;

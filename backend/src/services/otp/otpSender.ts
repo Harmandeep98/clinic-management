@@ -1,5 +1,10 @@
 import { smsClient } from "../../infrastructure/messageing/smsClient";
 
+type recipients = {
+  mobiles: string;
+  otp: string;
+}[];
+
 class OtpSender {
   async sendOtp(
     otp: string,
@@ -16,9 +21,11 @@ class OtpSender {
 
   private async sendSMSOtp(otp: string, phoneNumber: string) {
     try {
-      const message = `Your Clinic Verification code is ${otp}. Please do not share it with anybody.`;
-      const recipients = [{ mobiles: phoneNumber, VAR1: message }];
-      await smsClient.sendSms(recipients);
+      const recipients = [{ mobiles: phoneNumber, otp: otp }] as recipients;
+      const result = await smsClient.sendSms(recipients);
+      if (result.data && result.data.type === "error") {
+        throw new Error(`SMS Service Failed: ${result.data.message}`);
+      }
       return true;
     } catch (error) {
       console.error(error);

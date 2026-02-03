@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { loadConfig } from "../../config";
+import type { StringValue } from "ms";
 
 export function signJwt<T extends object>(
   payload: T,
@@ -8,7 +9,7 @@ export function signJwt<T extends object>(
   const jwtConfig = loadConfig().jwt;
   const expiry = type === "ACCESS" ? jwtConfig.expiresIn : jwtConfig.rfExpiry;
   return jwt.sign(payload, jwtConfig.secret, {
-    expiresIn: expiry,
+    expiresIn: expiry as StringValue,
     issuer: jwtConfig.verify.allowedIss,
   });
 }
@@ -21,10 +22,11 @@ export function verifyJwt<T>(token: string): T {
   }) as T;
 }
 
-export function decodeJwt<T>(token: string): T | null { 
+export function decodeJwt<T>(token: string): (T & { expired: boolean }) | null {
   const decoded = jwt.decode(token);
-  if (!decoded || typeof decoded === 'string') {
+  if (!decoded || typeof decoded === "string") {
     return null;
   }
-  return decoded as T;
+  const isExpired = decoded.exp! * 1000 < Date.now();
+  return { ...decoded, expired: isExpired } as T & { expired: boolean };
 }

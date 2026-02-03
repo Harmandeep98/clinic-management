@@ -1,14 +1,15 @@
 import { loadConfig } from "../../config/index";
 import { httpClient } from "../http/httpClinet";
 
-type recipients = {
-  mobiles: string;
-  VAR1: string;
-}[];
+interface SmsApiResponse {
+  type: string;
+  message: string;
+  request_id?: string;
+}
 
 class SMSClient {
   private config = loadConfig().messageing;
-  async sendSms(recipients: recipients) {
+  async sendSms(recipients: object[]) {
     const options = {
       headers: {
         accept: "application/json",
@@ -18,15 +19,15 @@ class SMSClient {
 
     const messageObject = {
       short_url: 0,
+      template_id: "698211cba2cdd74c4d380547",
       recipients: recipients,
     };
-
-    const result = await httpClient.post(
+    console.log(messageObject)
+    const result = await httpClient.post<SmsApiResponse>(
       "https://control.msg91.com/api/v5/flow",
       messageObject,
       options,
     );
-
     return result;
   }
 }

@@ -12,9 +12,7 @@ export function hashOtp(otp: string): string {
   return createHmac("sha256", config.otpSecret).update(otp).digest("hex");
 }
 
-export function compareOtp(otp: string, storedhash: string): boolean {
-  const hashedOtp = hashOtp(otp);
-
+export function compareOtp(hashedOtp: string, storedhash: string): boolean {
   return timingSafeEqual(
     Buffer.from(hashedOtp, "hex"),
     Buffer.from(storedhash, "hex"),
