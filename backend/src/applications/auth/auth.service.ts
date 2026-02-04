@@ -9,6 +9,7 @@ import {
 import { authRepository } from "../../repositories/auth/auth.repository";
 import { authStore } from "../../stores/auth/auth.store";
 import { PoolClient } from "pg";
+import { otpStore } from "../../stores/otp/otp.store";
 
 class AuthService {
   private async validateRefreshToken<T extends baseJwtPayload>(
@@ -107,6 +108,7 @@ class AuthService {
       tokenHash: refreshToken,
     });
     await authStore.storeRefeshToken(refreshToken, user.userId);
+    await otpStore.invalidateOtp(phoneNumber, "PATIENT");
     return { accessToken, refreshToken };
   }
 

@@ -11,6 +11,7 @@ export function signJwt<T extends object>(
   return jwt.sign(payload, jwtConfig.secret, {
     expiresIn: expiry as StringValue,
     issuer: jwtConfig.verify.allowedIss,
+    audience: [...jwtConfig.verify.allowedAud],
   });
 }
 
