@@ -95,6 +95,19 @@ CREATE TABLE public.clinics (
 
 
 --
+-- Name: clinics_mapping; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.clinics_mapping (
+    id uuid NOT NULL,
+    clinic_id uuid NOT NULL,
+    slug_hash uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: doctor_clinic_link; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -317,6 +330,22 @@ ALTER TABLE ONLY public.clinic_counters
 
 
 --
+-- Name: clinics_mapping clinics_mapping_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinics_mapping
+    ADD CONSTRAINT clinics_mapping_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: clinics_mapping clinics_mapping_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinics_mapping
+    ADD CONSTRAINT clinics_mapping_unique UNIQUE (slug_hash, clinic_id);
+
+
+--
 -- Name: clinics clinics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -516,6 +545,13 @@ CREATE INDEX billing_usage_visit_id_idx ON public.billing_usage USING btree (vis
 --
 
 CREATE INDEX clinics_location_idx ON public.clinics USING btree (country, state, city);
+
+
+--
+-- Name: clinics_mapping_search_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX clinics_mapping_search_idx ON public.clinics_mapping USING btree (slug_hash, clinic_id);
 
 
 --
@@ -771,6 +807,14 @@ ALTER TABLE ONLY public.clinic_counters
 
 
 --
+-- Name: clinics_mapping clinics_mapping_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinics_mapping
+    ADD CONSTRAINT clinics_mapping_fk FOREIGN KEY (clinic_id) REFERENCES public.clinics(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: doctor_clinic_link doctor_clinic_link_clinic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -899,6 +943,14 @@ ALTER TABLE ONLY public.user_patient_links
 
 
 --
+-- Name: user_refresh_tokens user_refresh_tokens_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_refresh_tokens
+    ADD CONSTRAINT user_refresh_tokens_fk FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: visits visits_appointment_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -953,6 +1005,8 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('001'),
     ('0010'),
     ('0011'),
+    ('0012'),
+    ('0013'),
     ('002'),
     ('003'),
     ('004'),

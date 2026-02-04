@@ -19,7 +19,9 @@ export function registerUserRoutes(server: FastifyInstance) {
     reply.status(201).send(result);
   });
 
-  server.post("/user/signup/clinic", async (request, reply) => {});
+  server.post("/user/signup/clinic", async (request, reply) => {
+    
+  });
 
   server.post("/user/signup/doctor", async (request, reply) => {});
 
