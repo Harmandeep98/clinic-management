@@ -114,7 +114,6 @@ class PatientRepository {
       patientData.phoneNumber,
       true,
     ];
-    console.log(patientData);
     await client.query(insertQuery, values);
   }
 

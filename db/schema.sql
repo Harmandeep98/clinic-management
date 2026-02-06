@@ -59,6 +59,25 @@ CREATE TABLE public.billing_usage (
 
 
 --
+-- Name: clinic_admins; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.clinic_admins (
+    id uuid NOT NULL,
+    clinic_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    role character varying(20) NOT NULL,
+    is_primary boolean DEFAULT false,
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by uuid,
+    updated_by uuid,
+    CONSTRAINT clinic_admins_role_check CHECK (((role)::text = ANY ((ARRAY['DOCTOR'::character varying, 'STAFF'::character varying])::text[])))
+);
+
+
+--
 -- Name: clinic_counters; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -90,6 +109,8 @@ CREATE TABLE public.clinics (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     short_code character varying(5) NOT NULL,
+    slug character varying(50) DEFAULT ''::character varying NOT NULL,
+    email character varying(255),
     CONSTRAINT clinics_status_check CHECK (((clinic_status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying, 'SUSPENDED'::character varying])::text[])))
 );
 
@@ -218,6 +239,19 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: staff; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.staff (
+    id uuid NOT NULL,
+    full_name character varying NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: user_clinic_roles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -228,6 +262,8 @@ CREATE TABLE public.user_clinic_roles (
     user_role character varying NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    staff_id uuid,
+    doctor_id uuid,
     CONSTRAINT user_clinic_roles_role_check CHECK (((user_role)::text = ANY ((ARRAY['ADMIN'::character varying, 'DOCTOR'::character varying, 'STAFF'::character varying])::text[])))
 );
 
@@ -319,6 +355,14 @@ ALTER TABLE ONLY public.billing_usage
 
 ALTER TABLE ONLY public.billing_usage
     ADD CONSTRAINT billing_usage_unique_visit UNIQUE (visit_id);
+
+
+--
+-- Name: clinic_admins clinic_admins_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_admins
+    ADD CONSTRAINT clinic_admins_pkey PRIMARY KEY (id);
 
 
 --
@@ -415,6 +459,22 @@ ALTER TABLE ONLY public.prescriptions
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: staff staff_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.staff
+    ADD CONSTRAINT staff_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: clinic_admins unique_clinic_admin; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_admins
+    ADD CONSTRAINT unique_clinic_admin UNIQUE (clinic_id, user_id);
 
 
 --
@@ -576,6 +636,48 @@ CREATE INDEX clinics_status_idx ON public.clinics USING btree (clinic_status);
 
 
 --
+-- Name: idx_clinic_admins_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_clinic_admins_active ON public.clinic_admins USING btree (clinic_id) WHERE (is_active = true);
+
+
+--
+-- Name: idx_clinic_admins_clinic_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_clinic_admins_clinic_id ON public.clinic_admins USING btree (clinic_id);
+
+
+--
+-- Name: idx_clinic_admins_primary; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_clinic_admins_primary ON public.clinic_admins USING btree (clinic_id, is_primary) WHERE (is_primary = true);
+
+
+--
+-- Name: idx_clinic_admins_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_clinic_admins_user_id ON public.clinic_admins USING btree (user_id);
+
+
+--
+-- Name: idx_clinics_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_clinics_email ON public.clinics USING btree (lower((email)::text)) WHERE (email IS NOT NULL);
+
+
+--
+-- Name: idx_clinics_slug; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_clinics_slug ON public.clinics USING btree (slug) WHERE ((slug)::text <> ''::text);
+
+
+--
 -- Name: idx_doctor_clinic_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -650,6 +752,20 @@ CREATE INDEX prescriptions_doctor_idx ON public.prescriptions USING btree (docto
 --
 
 CREATE INDEX prescriptions_patient_idx ON public.prescriptions USING btree (patient_id);
+
+
+--
+-- Name: user_clinic_roles_doctor_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX user_clinic_roles_doctor_idx ON public.user_clinic_roles USING btree (doctor_id) WHERE (doctor_id IS NOT NULL);
+
+
+--
+-- Name: user_clinic_roles_staff_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX user_clinic_roles_staff_idx ON public.user_clinic_roles USING btree (staff_id) WHERE (staff_id IS NOT NULL);
 
 
 --
@@ -799,6 +915,38 @@ ALTER TABLE ONLY public.billing_usage
 
 
 --
+-- Name: clinic_admins clinic_admins_clinic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_admins
+    ADD CONSTRAINT clinic_admins_clinic_id_fkey FOREIGN KEY (clinic_id) REFERENCES public.clinics(id) ON DELETE CASCADE;
+
+
+--
+-- Name: clinic_admins clinic_admins_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_admins
+    ADD CONSTRAINT clinic_admins_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: clinic_admins clinic_admins_updated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_admins
+    ADD CONSTRAINT clinic_admins_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: clinic_admins clinic_admins_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_admins
+    ADD CONSTRAINT clinic_admins_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: clinic_counters clinic_counters_clinic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -919,6 +1067,22 @@ ALTER TABLE ONLY public.user_clinic_roles
 
 
 --
+-- Name: user_clinic_roles user_clinic_roles_doctor_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_clinic_roles
+    ADD CONSTRAINT user_clinic_roles_doctor_fk FOREIGN KEY (doctor_id) REFERENCES public.doctors(id) ON DELETE SET NULL;
+
+
+--
+-- Name: user_clinic_roles user_clinic_roles_staff_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_clinic_roles
+    ADD CONSTRAINT user_clinic_roles_staff_fk FOREIGN KEY (staff_id) REFERENCES public.staff(id) ON DELETE SET NULL;
+
+
+--
 -- Name: user_clinic_roles user_clinic_roles_user_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1007,6 +1171,11 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('0011'),
     ('0012'),
     ('0013'),
+    ('0014'),
+    ('0015'),
+    ('0016'),
+    ('0017'),
+    ('0018'),
     ('002'),
     ('003'),
     ('004'),

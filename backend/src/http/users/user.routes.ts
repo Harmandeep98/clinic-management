@@ -12,15 +12,9 @@ export function registerUserRoutes(server: FastifyInstance) {
       id: userId,
       ...parsed,
     });
-    const result = await authService.patientLogin(
-      parsed.phoneNumber as string,
-    );
+    const result = await authService.patientLogin(parsed.phoneNumber as string);
 
     reply.status(201).send(result);
-  });
-
-  server.post("/user/signup/clinic", async (request, reply) => {
-    
   });
 
   server.post("/user/signup/doctor", async (request, reply) => {});

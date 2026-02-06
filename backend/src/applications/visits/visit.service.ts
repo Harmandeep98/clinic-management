@@ -1,7 +1,7 @@
 import { withTransaction } from "../../infrastructure/db/transaction";
 import { AppError } from "../../shared/errors/app-errors";
 import { visitRepo } from "../../repositories/visits/visit.repository";
-import { clinicRepo } from "../../repositories/clinics/clinic-read.repository";
+import { clinicRepo } from "../../repositories/clinics/clinic.repository";
 import { counterRepo } from "../../repositories/clinics/clinic-counter.repository";
 import { decodeCursor, encodeCursor } from "../../shared/pagination/cursor";
 import { visitWhere } from "../../repositories/visits/visit.types";
